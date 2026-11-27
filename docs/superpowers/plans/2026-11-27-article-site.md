@@ -894,8 +894,7 @@ git commit -m "feat: 抽出布局与中文排版样式"
 
 ---
 
-### Task 6: 部署工作流、README、上线
-
+### Task 6: 部署工作流、README、上线 ✅
 **Files:**
 - Create: `.github/workflows/deploy.yml`, `README.md`, `src/content/posts/随笔.md`
 - Modify: `src/layouts/Post.astro`, `src/lib/posts.js`, `tests/posts.test.js`, `tests/site.test.js`
@@ -1168,3 +1167,154 @@ gh run list --repo lessiskou/lessiskou.github.io --limit 2
 
 Expected: 最新运行 `completed success`（含新增的 Unit tests 步骤），且
 `curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/` 仍为 `200`。
+
+---
+
+### Task 8: 最终审阅的修复波
+
+**Dispatch notes:** 这一波只改测试、文档、一处配置，不加功能。改完必须做一次「删除示例文章的
+演练」（Step 9）——那正是审阅指出的、作者第一次动手就会撞上的场景。
+
+**Files:**
+- Modify: `tests/site.test.js`, `README.md`, `astro.config.mjs`, `.github/workflows/deploy.yml`, `docs/superpowers/plans/2026-11-27-article-site.md`（本文件的协议措辞与 Task 6 复选框）
+
+**Interfaces:**
+- Consumes: 现有全部；`readFrontmatter()`、`distHtml()`、`distIndex()`、`unescape()`。
+- Produces: 无新接口；测试数量仍为 21（改名不改数）。
+
+- [ ] **Step 1: `readFrontmatter()` 支持子目录**
+
+`glob` 的 pattern 是 `**/*.md`，但测试只扫一层，子目录里的文章对全部断言隐形。改成递归读取，
+并把相对路径归一成正斜杠：
+
+```js
+function readFrontmatter() {
+  return readdirSync(postsDir, { recursive: true })
+    .filter((f) => typeof f === 'string' && f.endsWith('.md'))
+    .map((rel) => {
+      const file = rel.split(sep).join('/');
+      const raw = readFileSync(join(postsDir, file), 'utf8');
+      const block = (raw.match(/^---\r?\n([\s\S]*?)\r?\n---/) ?? [])[1] ?? '';
+      const field = (name) => (block.match(new RegExp(`^${name}:\s*(.+)$`, 'm'))?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
+      return {
+        file,
+        title: field('title'),
+        pubDate: field('pubDate'),
+        permalink: field('permalink') || undefined,
+        draft: /^draft:\s*true\s*$/m.test(block),
+      };
+    });
+}
+```
+
+`sep` 从 `node:path` 引入；下游 `post.file.replace(/\.md$/, '')` 现在自然是 `子目录/文件名` 形式，
+与 `postPath` 的逐段编码一致。
+
+- [ ] **Step 2: 首页列表断言改成「按链接去重」，不再数标题子串**
+
+现在 `html.split(post.title).length - 1 === 1` 会在「读书笔记」与「读书笔记（二）」这种真实内容上
+误报。改成：每篇已发布文章的标题必须出现，且首页里没有任何重复的文章链接。
+
+```js
+test('首页列出所有已发布文章，且没有重复链接', () => {
+  const html = distIndex();
+  for (const post of readFrontmatter().filter((p) => !p.draft)) {
+    assert.ok(unescape(html).includes(post.title), `${post.file} 的标题应出现在首页`);
+  }
+  const hrefs = [...html.matchAll(/href="([^"]*\/posts\/[^"]*)"/g)].map((m) => m[1]);
+  assert.equal(new Set(hrefs).size, hrefs.length, '首页不应重复链接同一篇文章');
+});
+```
+
+- [ ] **Step 3: 年份分组断言由内容推导**
+
+不再硬编码 2026/2025（删掉 2025 那篇就红）：
+
+```js
+test('首页出现每个存在文章的年份', () => {
+  const years = new Set(readFrontmatter().filter((p) => !p.draft && p.pubDate).map((p) => p.pubDate.slice(0, 4)));
+  const html = distIndex();
+  for (const year of years) assert.match(html, new RegExp(`>\s*${year}\s*<`), `首页缺少 ${year} 分组`);
+});
+```
+
+- [ ] **Step 4: 转义断言改为「有就检查，没有就跳过」**
+
+```js
+test('标题里的 & 被转义，不破坏页面结构', (t) => {
+  const html = distIndex();
+  const risky = readFrontmatter().filter((p) => !p.draft && p.title.includes('&'));
+  if (risky.length === 0) return t.skip('没有含 & 标题的夹具');
+  assert.ok(html.includes('&amp;'), '& 应被转义为 &amp;');
+  for (const post of risky) assert.ok(!html.includes(`>${post.title}<`), `${post.file} 的原始字符不应直接出现`);
+});
+```
+
+- [ ] **Step 5: 返回链接断言覆盖所有文章页**
+
+```js
+test('所有文章页都有返回首页的链接', () => {
+  const pages = distHtml().filter((p) => p.path.includes(`${sep}posts${sep}`));
+  assert.ok(pages.length > 0, '应至少有一个文章页');
+  for (const page of pages) assert.match(page.text, /href="\/"/, `${page.path} 缺少返回链接`);
+});
+```
+
+- [ ] **Step 6: 文档说清「哪些示例不能删」**
+
+`README.md` 里那句「6 篇示例可以随时删除」是错的：`qa-amp.md`（转义断言）与 `draft-note.md`（草稿
+断言）有测试依赖。改成：
+
+- 可以直接删：`hello-world.md`、`older-note.md`、`别名/none` 这类纯示例（`note-alias.md`、`随笔.md`）。
+- **请保留**：`qa-amp.md`（验证标题转义）、`draft-note.md`（验证草稿不上线）。删掉它们，相应断言会
+  跳过或失效。
+- 一行说明：日期写越界（如 `2026-13-45`）不会报错，会按 YAML 归一化后的日期上线。
+- 一行说明：CI 会跑单测与验收测试。
+
+同时修正本计划文末「备注」里那句错误承诺（原文说删掉示例不会影响测试）。
+
+- [ ] **Step 7: CI 也跑验收测试**
+
+`.github/workflows/deploy.yml` 在 `withastro/action` 之后加：
+
+```yaml
+      - name: Acceptance tests
+        run: node --test tests/site.test.js
+```
+
+（会在 CI 里再构建一次，几秒钟；换来的是样式/`lang`/`<script>` 这类回归不会静默上线。）
+
+- [ ] **Step 8: 代码块换成浅色主题**
+
+页面是白底，默认的 `github-dark` 是整页唯一的深色块，还带二十来个内联样式。在 `astro.config.mjs`
+加：
+
+```js
+markdown: { shikiConfig: { theme: 'github-light' } },
+```
+
+- [ ] **Step 9: 演练「按 README 删示例」**
+
+```bash
+mkdir -p .tmp-fixtures && mv src/content/posts/older-note.md src/content/posts/qa-amp.md src/content/posts/note-alias.md src/content/posts/随笔.md .tmp-fixtures/
+npm test
+mv .tmp-fixtures/*.md src/content/posts/ && rmdir .tmp-fixtures
+```
+
+Expected: 删除后 `npm test` **仍然 PASS**（含跳过的转义断言），恢复后再跑一次 PASS。
+若删除后变红，修断言，不要改 README 去迁就。
+
+- [ ] **Step 10: 全绿并提交推送**
+
+Run: `npm test` → Expected: 21 个测试通过（含 1 个 skip 时仍计为通过）。
+```bash
+git add -A && git commit -m "fix: 示例文章可删（测试去夹具依赖）、CI 跑验收测试、代码块浅色主题"
+git push
+gh run list --repo lessiskou/lessiskou.github.io --limit 2
+```
+Expected: 最新运行 success（含 Unit tests 与 Acceptance tests 两步）；`curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/` → 200。
+
+- [ ] **Step 11: 补 Task 6 的完成标记**
+
+把 `### Task 6: 部署工作流、README、上线` 加上 ✅，并把本文件的执行协议里「把所有步骤复选框改成
+`[x]`」改成「标题加 ✅ 即可，步骤复选框不作要求」——两者实际都没被完整维护，协议应该描述现实。
