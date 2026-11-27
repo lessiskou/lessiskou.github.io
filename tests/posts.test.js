@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  isPublished, sortByDateDesc, yearOf, formatDate,
+  isPublished, sortByDateDesc, yearOf, formatDate, formatFullDate,
   permalinkOf, postPath, groupByYear, validatePermalinks,
 } from '../src/lib/posts.js';
 
@@ -51,6 +51,11 @@ test('嵌套 id 的斜杠保留，不被当成数据编码', () => {
 
 test('跨时区的日期仍按 UTC 取值', () => {
   assert.equal(formatDate(new Date('2026-01-01T00:30:00+08:00')), '12-31');
+});
+
+test('单篇页日期带年份，按 UTC 取 YYYY-MM-DD', () => {
+  assert.equal(formatFullDate(new Date('2026-01-01')), '2026-01-01');
+  assert.equal(formatFullDate(new Date('2026-01-01T00:30:00+08:00')), '2025-12-31');
 });
 
 test('按年分组，年份与组内都倒序', () => {

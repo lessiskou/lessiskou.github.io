@@ -86,11 +86,15 @@ test('草稿不生成任何页面，也不出现在首页', () => {
   }
 });
 
-test('页面引入样式表，且排版参数已落地', () => {
-  const page = distHtml()[0];
-  const href = page.text.match(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/)?.[1];
-  assert.ok(href, '页面应引入样式表');
-  const css = readFileSync(join(root, 'dist', href.replace(/^\//, '')), 'utf8');
+test('每页都引入样式表，且排版参数已落地', () => {
+  let css;
+  for (const page of distHtml()) {
+    const href = page.text.match(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/)?.[1];
+    assert.ok(href, `${page.path} 应引入样式表`);
+    // 所有页面共用同一份外部样式表，只读一次。
+    css ??= readFileSync(join(root, 'dist', href.replace(/^\//, '')), 'utf8');
+  }
+  assert.ok(css, '应该至少有一个页面');
   assert.match(css, /max-width:\s*40rem/, '正文宽度应为 40rem');
   assert.match(css, /line-height:\s*1\.75/, '行高应为 1.75');
 });
@@ -106,4 +110,11 @@ test('文章页有返回首页的链接', () => {
   const post = distHtml().find((p) => p.path.includes(join('posts', 'hello-world')));
   assert.ok(post, '应该有 hello-world 的页面');
   assert.match(post.text, /href="\/"/);
+});
+
+test('单篇页显示带年份的日期', () => {
+  const page = distHtml().find((p) => p.path === join(root, 'dist', 'posts', 'hello-world', 'index.html'));
+  assert.ok(page, '应该有 hello-world 的页面');
+  // 只认 <time> 的文字内容：datetime 属性里本来就有完整 ISO 时间，匹配不到它才有判别力。
+  assert.match(page.text, /<time[^>]*>2026-11-27<\/time>/);
 });

@@ -43,6 +43,15 @@ export function formatDate(date) {
 }
 
 /**
+ * UTC 的 YYYY-MM-DD，用于单篇页（列表页已有年份标题，故用 formatDate）。
+ * @param {Date} date
+ * @returns {string}
+ */
+export function formatFullDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+
+/**
  * 自定义地址优先，否则用条目 id（文件名派生）。
  * @param {{ id: string, data: { permalink?: string } }} entry
  * @returns {string}
