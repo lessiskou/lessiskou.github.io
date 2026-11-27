@@ -10,6 +10,17 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-27-article-site-design.md`
 
+## 执行协议（子代理收不到任务正文时必须自举）
+
+本仓库的子代理通道会丢失派发正文。你被派来干活时，按下面的规则自举：
+
+1. 先读本文件的 Global Constraints、Review Focus 与目标任务的**完整**正文。
+2. 按编号顺序找到**第一个标题不带 ✅** 的任务，只做那一个。完成后把它的标题加上 ✅、把它的所有步骤复选框改成 `[x]`，然后停手——不要顺手做下一个任务。
+3. 任务原文另有等价的独立副本：`.superpowers/sdd/2026-11-27-article-site/task-<N>-brief.md`；该任务若有 **Dispatch notes**，一并遵守。
+4. 把完整报告写到 `.superpowers/sdd/2026-11-27-article-site/task-<N>-report.md`，回复只给：状态（DONE/DONE_WITH_CONCERNS/BLOCKED/NEEDS_CONTEXT）、提交 SHA、一行测试结果、顾虑、报告路径。
+5. 不得派发任何子代理；审阅由控制端另行安排。
+6. 如果你是来审阅的：不要实现任何任务，先读仓库根目录的 `REVIEW-QUEUE.md`，按它执行。
+
 ## Global Constraints
 
 - `astro` 版本必须精确写为 `"7.4.13"`（不带 `^`），`package-lock.json` 必须提交。
@@ -21,7 +32,7 @@
 - 正文最大宽度约 `40rem`，行高 `1.75`；字体栈只用系统字体，不加载网络字体（不允许 `@import` / `<link>` 到字体 CDN）。
 - 任何页面不得输出 `<script>` 标签（无客户端 JS）。
 - 自定义地址字段叫 `permalink`，值必须匹配 `/^[a-z0-9-]+$/`；不得使用 `slug` 作字段名（Astro 保留名）。
-- 测试命令：`npm test`（即 `node --test tests/`）。构建命令：`npm run build`。
+- 测试命令：`npm test`（即 `node --test "tests/**/*.test.js"`——Node 22 在 Windows 上传目录名会当作模块解析，必须用 glob 形式）。构建命令：`npm run build`。
 - Node `>=22.12.0`；Actions 里由 `withastro/action` 提供 Node 24。
 
 ## Review Focus
@@ -34,7 +45,7 @@
 
 ---
 
-### Task 1: 项目骨架、内容集合与一篇示例文章
+### Task 1: 项目骨架、内容集合与一篇示例文章 ✅
 
 **Files:**
 - Create: `package.json`, `astro.config.mjs`, `tsconfig.json`, `.gitignore`, `src/content.config.ts`
@@ -228,7 +239,7 @@ git commit -m "chore: Astro 骨架与文章内容集合"
 
 ---
 
-### Task 2: 纯函数库（排序、UTC 日期、地址、草稿过滤、permalink 校验）
+### Task 2: 纯函数库（排序、UTC 日期、地址、草稿过滤、permalink 校验） ✅
 
 **Files:**
 - Create: `src/lib/posts.js`
@@ -786,6 +797,11 @@ git commit -m "feat: 抽出布局与中文排版样式"
 **Interfaces:**
 - Consumes: 全部前面的产物。
 - Produces: 仓库 `less-is-kou/less-is-kou.github.io`，Pages 以 Actions 为源，站点 `https://less-is-kou.github.io/` 返回 200。
+
+**Dispatch notes:**
+- 本机 `gh` 已登录为账号 `lessiskou`，具备 `repo` 与 `workflow` scope，无需重新登录。
+- 仓库尚未创建（本地 `origin` 不存在），`gh repo create` 会创建公开仓库并推送，这是计划已批准的动作。
+- 本章最后一步（网页端新建文章验证）会写入真实仓库并触发一次部署；验证完必须删掉那篇临时文章。若删除失败，停下并报告，不要留着。
 
 - [ ] **Step 1: 写 `.github/workflows/deploy.yml`**
 
