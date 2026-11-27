@@ -661,7 +661,7 @@ git commit -m "feat: 由内容集合生成文章页，排除草稿"
 
 ---
 
-### Task 5: 版式与排版（Base/Post 布局、样式、无脚本）
+### Task 5: 版式与排版（Base/Post 布局、样式、无脚本） ✅
 
 **Dispatch notes:** 本任务开头有一个 Step 0，处理 Task 4 审阅留下的两个验证盲区（permalink 护栏、
 子串匹配）。先做完 Step 0 并跑绿，再做布局与样式；同一个任务里一起提交。
@@ -674,7 +674,7 @@ git commit -m "feat: 由内容集合生成文章页，排除草稿"
 - Consumes: Task 3/4 的页面。
 - Produces: `Base.astro` 接收 `{ title: string }` 与 `<slot />`；`Post.astro` 接收 `{ post }`（Task 1 的条目形状），内部渲染 `<Content />`。页面只保留各自的 `frontmatter` 数据逻辑。
 
-- [ ] **Step 0a: 加一个「permalink 与文件名不同」的夹具**
+- [x] **Step 0a: 加一个「permalink 与文件名不同」的夹具**
 
 现有三篇夹具的 `permalink` 恰好都等于文件名，所以路由写成 `post.id` 也能全绿——`permalinkOf`
 没有任何回归护栏。新建 `src/content/posts/note-alias.md`：
@@ -690,7 +690,7 @@ permalink: alias-name
 这一篇的地址应该是 /posts/alias-name/，而不是文件名。
 ```
 
-- [ ] **Step 0b: 把路径断言改成精确匹配，并覆盖 id 回退**
+- [x] **Step 0b: 把路径断言改成精确匹配，并覆盖 id 回退**
 
 `tests/site.test.js` 里那条测试改成：
 
@@ -710,7 +710,7 @@ test('每篇已发布文章都有自己的页面，地址与 permalink 一致', 
 Run: `npm test`
 Expected: PASS（16 个测试；夹具与断言改动不改变数量）。同时确认 `dist/posts/alias-name/index.html` 存在（若路由误用 `post.id`，这里会变成 `note-alias` 并挂红）。
 
-- [ ] **Step 1: 追加失败的测试**
+- [x] **Step 1: 追加失败的测试**
 
 在 `tests/site.test.js` 末尾追加：
 
@@ -738,12 +738,12 @@ test('文章页有返回首页的链接', () => {
 });
 ```
 
-- [ ] **Step 2: 跑测试确认失败**
+- [x] **Step 2: 跑测试确认失败**
 
 Run: `npm test`
 Expected: 样式表测试 FAIL（还没有 CSS）。另两个断言此时可能已通过（Task 3/4 的页面已经内联了 `lang` 与返回链接）——只要有一个新测试是红的，这一轮就成立。
 
-- [ ] **Step 3: 写 `src/styles/global.css`**
+- [x] **Step 3: 写 `src/styles/global.css`**
 
 ```css
 :root {
@@ -803,7 +803,7 @@ th, td { border: 1px solid var(--rule); padding: 0.4rem 0.6rem; text-align: left
 nav { margin-bottom: 1rem; font-size: 0.9rem; }
 ```
 
-- [ ] **Step 4: 写 `src/layouts/Base.astro`**
+- [x] **Step 4: 写 `src/layouts/Base.astro`**
 
 ```astro
 ---
@@ -823,7 +823,7 @@ const { title } = Astro.props;
 </html>
 ```
 
-- [ ] **Step 5: 写 `src/layouts/Post.astro`**
+- [x] **Step 5: 写 `src/layouts/Post.astro`**
 
 ```astro
 ---
@@ -845,7 +845,7 @@ const backHref = import.meta.env.BASE_URL;
 </Base>
 ```
 
-- [ ] **Step 6: 两个页面改用布局**
+- [x] **Step 6: 两个页面改用布局**
 
 `src/pages/index.astro`：删掉自己的 `<html>/<head>/<body>` 外壳，改成
 
@@ -875,17 +875,17 @@ const { post } = Astro.props;
 <Post post={post} />
 ```
 
-- [ ] **Step 7: 跑测试确认通过**
+- [x] **Step 7: 跑测试确认通过**
 
 Run: `npm test`
 Expected: PASS（19 个测试）。
 
-- [ ] **Step 8: 本地肉眼验一遍**
+- [x] **Step 8: 本地肉眼验一遍**
 
 Run: `npm run dev`，打开 `http://localhost:4321/`，确认：列表无缩进符号、日期右对齐、正文行宽约 40rem、文章页有返回链接。
 Expected: 与描述一致。看完 `Ctrl+C` 停掉。
 
-- [ ] **Step 9: 提交**
+- [x] **Step 9: 提交**
 
 ```bash
 git add -A
@@ -897,7 +897,8 @@ git commit -m "feat: 抽出布局与中文排版样式"
 ### Task 6: 部署工作流、README、上线
 
 **Files:**
-- Create: `.github/workflows/deploy.yml`, `README.md`
+- Create: `.github/workflows/deploy.yml`, `README.md`, `src/content/posts/随笔.md`
+- Modify: `src/layouts/Post.astro`, `src/lib/posts.js`, `tests/posts.test.js`, `tests/site.test.js`
 
 **Interfaces:**
 - Consumes: 全部前面的产物。
@@ -907,6 +908,65 @@ git commit -m "feat: 抽出布局与中文排版样式"
 - 本机 `gh` 已登录为账号 `lessiskou`，具备 `repo` 与 `workflow` scope，无需重新登录。
 - 仓库尚未创建（本地 `origin` 不存在），`gh repo create` 会创建公开仓库并推送，这是计划已批准的动作。
 - 本章最后一步（网页端新建文章验证）会写入真实仓库并触发一次部署；验证完必须删掉那篇临时文章。若删除失败，停下并报告，不要留着。
+- **上线之前**先做 Step 0——它修复的是用户打开分享链接时会看到的缺陷（文章页日期没有年份），必须在部署前完成。
+
+- [ ] **Step 0a: 文章页日期补上年份**
+
+`Post.astro` 现在调 `formatDate()`，只输出 `MM-DD`；列表页有 `<h2>2026</h2>` 提供上下文，单篇页
+没有，读者看到的只是 `06-05`。在 `src/lib/posts.js` 里 `formatDate` 旁边加一个整日期函数：
+
+```js
+/**
+ * UTC 的 YYYY-MM-DD，用于单篇页（列表页已有年份标题，故用 formatDate）。
+ * @param {Date} date
+ * @returns {string}
+ */
+export function formatFullDate(date) {
+  return date.toISOString().slice(0, 10);
+}
+```
+
+`src/layouts/Post.astro` 改用 `formatFullDate(post.data.pubDate)`（导入一并改）。
+
+在 `tests/posts.test.js` 补一条：`assert.equal(formatFullDate(new Date('2026-01-01')), '2026-01-01');`
+
+- [ ] **Step 0b: 用断言盯住这个回归**
+
+在 `tests/site.test.js` 末尾追加：
+
+```js
+test('单篇页显示带年份的日期', () => {
+  const page = distHtml().find((p) => p.path === join(root, 'dist', 'posts', 'hello-world', 'index.html'));
+  assert.ok(page, '应该有 hello-world 的页面');
+  assert.match(page.text, /2026-11-27/);
+});
+```
+
+- [ ] **Step 0c: 让 id 回退路径真的被执行**
+
+现有 5 篇夹具都写了 `permalink`，所以验收测试里 `post.permalink ?? 文件名` 的左分支永远命中，
+「不写 permalink 时地址由文件名派生」这条从未被验证。新建 `src/content/posts/随笔.md`（故意用中文名、
+不写 `permalink`）：
+
+```markdown
+---
+title: 没有自定义地址的一篇
+pubDate: 2024-01-15
+---
+
+这一篇没有 permalink，地址应该由文件名派生。
+```
+
+- [ ] **Step 0d: 样式断言覆盖所有页面**
+
+`tests/site.test.js` 里样式表那条现在只看 `distHtml()[0]`（首页）。改成逐页断言：把读取
+`<link rel="stylesheet">` 与 `href` 的检查放进对 `distHtml()` 的循环（CSS 文件仍然只读一次）。
+
+- [ ] **Step 0e: 跑测试确认 Step 0 完成**
+
+Run: `npm test`
+Expected: PASS（21 个测试：10 个单测 + 1 个新单测 + 10 个验收）。若中文文件名派生的路径不是
+`dist/posts/随笔/index.html`，先报告实际路径再动断言，不要反过来改断言迁就实现。
 
 - [ ] **Step 1: 写 `.github/workflows/deploy.yml`**
 
@@ -952,7 +1012,7 @@ jobs:
 - [ ] **Step 3: 本地最后一次全绿**
 
 Run: `npm test`
-Expected: PASS（19 个测试）。
+Expected: PASS（21 个测试）。
 
 - [ ] **Step 4: 把工作流与说明先提交到本地**
 
