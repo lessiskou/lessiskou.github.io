@@ -15,7 +15,7 @@
 本仓库的子代理通道会丢失派发正文。你被派来干活时，按下面的规则自举：
 
 1. 先读本文件的 Global Constraints、Review Focus 与目标任务的**完整**正文。
-2. 按编号顺序找到**第一个标题不带 ✅** 的任务，只做那一个。完成后把它的标题加上 ✅、把它的所有步骤复选框改成 `[x]`，然后停手——不要顺手做下一个任务。
+2. 按编号顺序找到**第一个标题不带 ✅** 的任务，只做那一个。完成后把它的标题加上 ✅（步骤复选框不作要求），然后停手——不要顺手做下一个任务。
 3. 任务原文另有等价的独立副本：`.superpowers/sdd/2026-11-27-article-site/task-<N>-brief.md`；该任务若有 **Dispatch notes**，一并遵守。
 4. 把完整报告写到 `.superpowers/sdd/2026-11-27-article-site/task-<N>-report.md`，回复只给：状态（DONE/DONE_WITH_CONCERNS/BLOCKED/NEEDS_CONTEXT）、提交 SHA、一行测试结果、顾虑、报告路径。
 5. 不得派发任何子代理；审阅由控制端另行安排。
@@ -1099,7 +1099,7 @@ Expected: 删除成功，下一次部署后该地址变 404。
 
 ## 备注
 
-- 示例文章（`hello-world.md`、`older-note.md`、`qa-amp.md`、`draft-note.md`）是测试夹具。作者删掉它们时，`tests/site.test.js` 仍是结构化的（按目录里实际存在的文件推导预期），不会因此失败；但 `draft-note.md` 这类用于验证「草稿不出现」的夹具，删掉后就少了一层保护，建议至少留一篇草稿。
+- 示例文章是测试夹具，`tests/site.test.js` 按目录里实际存在的文件推导预期，删掉纯示例不影响测试；但 `qa-amp.md`（标题转义）与 `draft-note.md`（草稿不上线）有断言依赖，删掉后对应断言会跳过，这两篇请保留。
 - 第一次部署前 Pages 尚未启用，`gh run` 里可能先出现一次失败；Step 6 设好 `build_type=workflow` 后在 Actions 页手动重跑（`gh workflow run deploy.yml`）即可。
 - 本计划不包含 RSS、标签、搜索、评论、自定义域名——都是 spec 里的非目标。
 
@@ -1170,7 +1170,7 @@ Expected: 最新运行 `completed success`（含新增的 Unit tests 步骤）�
 
 ---
 
-### Task 8: 最终审阅的修复波
+### Task 8: 最终审阅的修复波 ✅
 
 **Dispatch notes:** 这一波只改测试、文档、一处配置，不加功能。改完必须做一次「删除示例文章的
 演练」（Step 9）——那正是审阅指出的、作者第一次动手就会撞上的场景。

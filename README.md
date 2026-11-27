@@ -25,9 +25,14 @@ permalink: my-post
 
 在网页上新建并提交同样生效：提交到 `main` 即触发部署，无需本地环境。
 
-`src/content/posts/` 下现有 6 篇是示例与测试夹具（`hello-world.md`、`older-note.md`、
-`qa-amp.md`、`note-alias.md`、`随笔.md`、`draft-note.md`），可以随时删除，删完不需要改任何列表
-文件。但请至少留一篇 `draft: true` 的文章，否则「草稿不上线」这条保护就没有夹具在验证。
+`src/content/posts/` 下现有 6 篇是示例与测试夹具，删掉不需要改任何列表文件：
+
+- 可以直接删：`hello-world.md`、`older-note.md`、`note-alias.md`、`随笔.md`。
+- **请保留**：`qa-amp.md`（验证标题里的 `&` 与尖括号被转义）、`draft-note.md`（验证草稿不上线）。删掉
+  它们，对应断言会跳过或失效。
+
+两条已知行为：日期写越界（如 `2026-13-45`）不会报错，会按 YAML 归一化后的日期上线；CI 会跑单测
+与验收测试，任何一项红了就不部署。
 
 ## 本地预览
 

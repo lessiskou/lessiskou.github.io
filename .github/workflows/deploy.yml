@@ -25,6 +25,8 @@ jobs:
       - name: Unit tests
         run: node --test tests/posts.test.js
       - uses: withastro/action@v6
+      - name: Acceptance tests
+        run: node --test tests/site.test.js
 
   deploy:
     needs: build

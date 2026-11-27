@@ -7,4 +7,6 @@ export default defineConfig({
   // 默认 'auto' 会把小体积 CSS 内联进每个 HTML；这里固定产出独立样式表，
   // 让 CSS 可缓存、断言能读到真实文件，也避免同一份样式逐页重复。
   build: { inlineStylesheets: 'never' },
+  // 页面是白底，默认的 github-dark 会变成整页唯一的深色块。
+  markdown: { shikiConfig: { theme: 'github-light' } },
 });
