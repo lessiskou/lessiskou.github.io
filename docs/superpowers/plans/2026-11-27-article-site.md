@@ -584,10 +584,12 @@ Expected: PASS（14 个测试，文案改动不影响行为）。
 在 `tests/site.test.js` 末尾追加：
 
 ```js
-test('每篇已发布文章都有页面，标题出现在其中', () => {
-  const pages = distHtml().map((p) => unescape(p.text));
-  for (const post of readFrontmatter().filter((p) => !p.draft)) {
-    assert.ok(pages.some((t) => t.includes(post.title)), `${post.file} 应生成页面`);
+test('每篇已发布文章都有自己的页面，地址与 permalink 一致', () => {
+  const pages = distHtml();
+  for (const post of readFrontmatter().filter((p) => !p.draft && p.permalink)) {
+    const page = pages.find((p) => p.path.includes(join('posts', post.permalink)));
+    assert.ok(page, `${post.file} 应有 /posts/${post.permalink}/ 页面`);
+    assert.ok(unescape(page.text).includes(post.title), `${post.file} 的标题应出现在自己的页面里`);
   }
 });
 
@@ -599,10 +601,15 @@ test('草稿不生成任何页面，也不出现在首页', () => {
 });
 ```
 
+**Step 1 偏差已裁定（执行中实测）：** 初版断言只看「某处出现这个标题」，而 `distHtml()` 包含
+`dist/index.html`，首页本来就有每篇已发布文章的标题——于是它在实现之前就是绿的，对「文章页缺失」
+零判别力。改为按 `join('posts', permalink)` 精确匹配路径（`readFrontmatter()` 相应多返回一个
+`permalink` 字段）。
+
 - [ ] **Step 2: 跑测试确认失败**
 
 Run: `npm test`
-Expected: FAIL——`dist/posts/` 下没有页面，断言「应生成页面」失败。
+Expected: FAIL——`dist/posts/` 下没有页面，断言「应有 /posts/<permalink>/ 页面」失败。
 
 - [ ] **Step 3: 实现 `src/pages/posts/[...id].astro`**
 
@@ -643,7 +650,7 @@ const backHref = import.meta.env.BASE_URL;
 - [ ] **Step 4: 跑测试确认通过**
 
 Run: `npm test`
-Expected: PASS（14 个测试）。同时确认 `ls dist/posts` 里有 `hello-world`、`older-note`，没有 `draft-note`。
+Expected: PASS（16 个测试）。同时确认 `ls dist/posts` 里有 `hello-world`、`older-note`、`qa-amp`，没有 `draft-note`。
 
 - [ ] **Step 5: 提交**
 
