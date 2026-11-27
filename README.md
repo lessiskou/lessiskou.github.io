@@ -1,7 +1,7 @@
 # 寇强的文章站
 
 极简中文文章站：Markdown 写在 `src/content/posts/`，推到 `main` 就上线。
-线上地址：<https://less-is-kou.github.io/>
+线上地址：<https://lessiskou.github.io/>
 
 ## 写一篇新文章
 
