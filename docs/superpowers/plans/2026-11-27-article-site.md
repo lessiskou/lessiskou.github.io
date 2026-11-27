@@ -360,7 +360,7 @@ git commit -m "feat: 文章排序、UTC 日期与地址拼装工具"
 
 ---
 
-### Task 3: 首页列表（由内容集合生成）
+### Task 3: 首页列表（由内容集合生成） ✅
 
 **Dispatch notes:** 本任务开头有一个 Step 0，是 Task 1/2 审阅提出的三条修正（日期校验、UTC 测试、嵌套 id 编码）。先完成 Step 0 并跑绿 `npm test`，再做 Step 1 起的首页工作；两者要在同一个任务里提交。
 
@@ -391,6 +391,13 @@ YAML 会把 `2026-11-27` 直接解析成 `Date`（UTC 零点），这条分支�
 
 新建 `src/content/posts/bad-date.md`（只有 `title` 与 `pubDate: 2026-1-5`），Run: `npm run build`
 Expected: 失败，错误信息包含 `pubDate` 与 `bad-date.md`。删除该文件后重跑 `npm run build` 应通过。
+
+**Step 0b 偏差已裁定（执行中实测，以实测为准）：** 未加引号的 `2026-1-5` 到不了 schema——YAML 的
+timestamp 解析器先把它变成 `Date.UTC(2026, 0, 5)` → `2026-01-05T00:00:00Z`，所以构建不失败，且日期与
+年份分组都是 UTC 正确的（不会掉年份）。真正全红的只有三种：带引号的非补零串、格式非法串、日历
+非法串（`"2026-13-45"`）。已知残留限制：未加引号的越界日期（如 `2026-13-45`）会被 YAML 归一成
+`2027-02-14` 并正常上线——loader 层已丢失原始文本，schema 无法拦，只能靠作者写规范日期。
+因此上面这条 Step 0b 的 Expected 仅在**加引号**的形式下成立。
 
 - [ ] **Step 0c: 修正 `postPath` 的嵌套 id 编码**
 
@@ -552,13 +559,25 @@ git commit -m "feat: 首页按年份列出文章"
 
 ### Task 4: 文章页路由
 
+**Dispatch notes:** 本任务开头有一个 Step 0，处理 Task 3 审阅留下的两个小口子（文案与注释），
+与本任务的路由一起提交、一起受审。
+
 **Files:**
 - Create: `src/pages/posts/[...id].astro`
-- Modify: `tests/site.test.js`（追加两个测试）
+- Modify: `tests/site.test.js`（追加两个测试）, `src/content.config.ts`
 
 **Interfaces:**
 - Consumes: `isPublished`、`permalinkOf`、`validatePermalinks`（Task 2）；`distHtml`/`readFrontmatter`（Task 3）；`render(entry)` 来自 `astro:content`。
 - Produces: 路由 `/posts/<permalink 或 id>/`；`getStaticPaths` 返回 `params: { id }` + `props: { post }`。
+
+- [ ] **Step 0: 收掉 Task 3 审阅的两个小口子**
+
+1. `src/content.config.ts` 里的 `pubDate` 报错文案现在说「必须是补零的 YYYY-MM-DD」，但作者如果是手写了带时区的带引号 ISO 串，被这句引到的地方是错的。改成：
+   `'pubDate 请写成不带引号的 YYYY-MM-DD（不要加引号，日期会由 YAML 解析）'`。
+2. 在同一个文件、`pubDate` 定义上方加一行注释：`// 未加引号的越界日期（如 2026-13-45）会被 YAML 归一化成合法 Date，schema 层拦不住。`
+
+Run: `npm test`
+Expected: PASS（14 个测试，文案改动不影响行为）。
 
 - [ ] **Step 1: 追加失败的测试**
 
