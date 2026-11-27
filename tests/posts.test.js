@@ -45,6 +45,14 @@ test('文章地址带 base 前缀，中文文件名被百分号编码', () => {
   assert.equal(postPath(entry({ id: '你好' }), '/'), '/posts/%E4%BD%A0%E5%A5%BD/');
 });
 
+test('嵌套 id 的斜杠保留，不被当成数据编码', () => {
+  assert.equal(postPath(entry({ id: 'sub/note' }), '/'), '/posts/sub/note/');
+});
+
+test('跨时区的日期仍按 UTC 取值', () => {
+  assert.equal(formatDate(new Date('2026-01-01T00:30:00+08:00')), '12-31');
+});
+
 test('按年分组，年份与组内都倒序', () => {
   const grouped = groupByYear([
     entry({ id: 'a.md', data: { pubDate: new Date('2026-11-27') } }),

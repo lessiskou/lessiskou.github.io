@@ -59,8 +59,9 @@ export function permalinkOf(entry) {
  */
 export function postPath(entry, base) {
   const prefix = base.replace(/\/+$/, '');
-  const segment = encodeURIComponent(permalinkOf(entry));
-  return `${prefix}/posts/${segment}/`;
+  // 逐段编码：子目录 id 里的 `/` 必须保留，否则 `sub/note` 会变成死链 `sub%2Fnote`。
+  const segments = permalinkOf(entry).split('/').map(encodeURIComponent).join('/');
+  return `${prefix}/posts/${segments}/`;
 }
 
 /**

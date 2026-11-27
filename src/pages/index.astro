@@ -1,6 +1,40 @@
 ---
+import { getCollection } from 'astro:content';
+import { groupByYear, formatDate, postPath, isPublished, sortByDateDesc, validatePermalinks } from '../lib/posts.js';
+
+const base = import.meta.env.BASE_URL;
+const posts = sortByDateDesc(
+  await getCollection('posts', ({ data }) => isPublished({ data }, { prod: import.meta.env.PROD })),
+);
+validatePermalinks(posts);
+const groups = groupByYear(posts);
 ---
 <html lang="zh-CN">
-  <head><title>寇强</title></head>
-  <body><h1>寇强</h1></body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>寇强</title>
+  </head>
+  <body>
+    <header>
+      <h1>寇强</h1>
+      <p>写点文章。</p>
+    </header>
+    <main>
+      {groups.map(({ year, entries }) => (
+        <section>
+          <h2>{year}</h2>
+          <ul>
+            {entries.map((post) => (
+              <li>
+                <a href={postPath(post, base)}>{post.data.title}</a>
+                <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+                {post.data.description?.trim() && <p class="excerpt">{post.data.description}</p>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </main>
+  </body>
 </html>
