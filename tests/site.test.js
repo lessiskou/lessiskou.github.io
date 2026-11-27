@@ -16,8 +16,9 @@ function readFrontmatter() {
       const block = (raw.match(/^---\r?\n([\s\S]*?)\r?\n---/) ?? [])[1] ?? '';
       const title = (block.match(/^title:\s*(.+)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
       const permalink = (block.match(/^permalink:\s*(.+)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '') || undefined;
+      const pubDate = block.match(/^pubDate:\s*(\d{4}-\d{2}-\d{2})/m)?.[1];
       const draft = /^draft:\s*true\s*$/m.test(block);
-      return { file, title, permalink, draft };
+      return { file, title, permalink, pubDate, draft };
     });
 }
 
@@ -112,9 +113,14 @@ test('文章页有返回首页的链接', () => {
   assert.match(post.text, /href="\/"/);
 });
 
-test('单篇页显示带年份的日期', () => {
-  const page = distHtml().find((p) => p.path === join(root, 'dist', 'posts', 'hello-world', 'index.html'));
-  assert.ok(page, '应该有 hello-world 的页面');
-  // 只认 <time> 的文字内容：datetime 属性里本来就有完整 ISO 时间，匹配不到它才有判别力。
-  assert.match(page.text, /<time[^>]*>2026-11-27<\/time>/);
+test('每篇已发布文章的页面都显示带年份的日期', () => {
+  const pages = distHtml();
+  for (const post of readFrontmatter().filter((p) => !p.draft && p.pubDate)) {
+    const segment = post.permalink ?? post.file.replace(/\.md$/, '');
+    const expected = join(root, 'dist', 'posts', segment, 'index.html');
+    const page = pages.find((p) => p.path === expected);
+    assert.ok(page, `${post.file} 应生成 ${expected}`);
+    // 只认 <time> 的文字内容：datetime 属性里本来就有完整 ISO 时间，匹配不到它才有判别力。
+    assert.match(page.text, new RegExp(`<time[^>]*>${post.pubDate}</time>`), `${post.file} 的日期应显示为 ${post.pubDate}`);
+  }
 });

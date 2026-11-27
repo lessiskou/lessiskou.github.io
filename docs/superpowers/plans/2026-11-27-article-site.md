@@ -1106,7 +1106,7 @@ Expected: 删除成功，下一次部署后该地址变 404。
 
 ---
 
-### Task 7: 收尾修正（README 模板、夹具删除后的测试、CI 跑单测）
+### Task 7: 收尾修正（README 模板、夹具删除后的测试、CI 跑单测） ✅
 
 **Files:**
 - Modify: `README.md`, `tests/site.test.js`, `.github/workflows/deploy.yml`
@@ -1115,20 +1115,20 @@ Expected: 删除成功，下一次部署后该地址变 404。
 - Consumes: Task 1–6 的全部产物；`readFrontmatter()`（Task 3/4/5）、`unescape`（Task 3）。
 - Produces: 无新接口；测试数量保持 21。
 
-- [ ] **Step 1: 拿掉 README 模板里的 `draft: true`**
+- [x] **Step 1: 拿掉 README 模板里的 `draft: true`**
 
 `README.md` 的「写一篇新文章」示例 frontmatter 里现在有一行未注释的 `draft: true`。作者照抄就会
 得到「构建成功、部署成功、站点上没有」——正是最该避免的静默失败。删掉那一行；`draft` 仍保留在
 下面的字段说明里（作为可选字段解释何时该用）。
 
-- [ ] **Step 2: 在 README 里点名示例文章**
+- [x] **Step 2: 在 README 里点名示例文章**
 
 在「测试」或「写一篇新文章」小节加一段：`src/content/posts/` 下现有 6 篇是示例/夹具
 （`hello-world.md`、`older-note.md`、`qa-amp.md`、`note-alias.md`、`随笔.md`、`draft-note.md`），
 可以随时删除，删完不需要改任何列表文件；但请至少留一篇 `draft: true` 的文章，否则「草稿不上线」
 这条保护就没有夹具在验证。
 
-- [ ] **Step 3: 让日期断言不再依赖某一篇具体文章**
+- [x] **Step 3: 让日期断言不再依赖某一篇具体文章**
 
 `tests/site.test.js` 现在的日期测试硬编码 `hello-world`，作者删掉示例文章后它会红，而且报错看不懂。
 改成结构化断言：
@@ -1137,7 +1137,7 @@ Expected: 删除成功，下一次部署后该地址变 404。
 2. 把那条测试改成：对每一篇非草稿且带 `pubDate` 的文章，找到它自己的页面，断言页面里存在
    `<time[^>]*>${pubDate}</time>`（必须匹配 `<time>` 里的文字，不能只匹配 ISO 属性）。
 
-- [ ] **Step 4: 部署前跑单测**
+- [x] **Step 4: 部署前跑单测**
 
 `.github/workflows/deploy.yml` 的 `build` job 里，`withastro/action` 之前插入两步：
 
@@ -1152,12 +1152,12 @@ Expected: 删除成功，下一次部署后该地址变 404。
 只跑纯函数单测（毫秒级、不需要 Astro 构建），验收测试仍留在本地 `npm test`：它自己会跑一次
 完整构建，放进部署流水线等于每次部署构建两遍。
 
-- [ ] **Step 5: 本地验证**
+- [x] **Step 5: 本地验证**
 
 Run: `npm test`
 Expected: PASS（21 个测试，数量不变）。
 
-- [ ] **Step 6: 提交、推送并确认线上仍绿**
+- [x] **Step 6: 提交、推送并确认线上仍绿**
 
 ```bash
 git add -A

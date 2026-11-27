@@ -13,7 +13,6 @@ title: 文章标题
 pubDate: 2026-11-27
 description: 可选，列表页的一句提要。
 permalink: my-post
-draft: true
 ---
 
 正文。
@@ -25,6 +24,10 @@ draft: true
 - `draft: true` 的文章只在 `npm run dev` 里可见，正式构建不会上线。
 
 在网页上新建并提交同样生效：提交到 `main` 即触发部署，无需本地环境。
+
+`src/content/posts/` 下现有 6 篇是示例与测试夹具（`hello-world.md`、`older-note.md`、
+`qa-amp.md`、`note-alias.md`、`随笔.md`、`draft-note.md`），可以随时删除，删完不需要改任何列表
+文件。但请至少留一篇 `draft: true` 的文章，否则「草稿不上线」这条保护就没有夹具在验证。
 
 ## 本地预览
 
