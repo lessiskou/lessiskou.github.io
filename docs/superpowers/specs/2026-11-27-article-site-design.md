@@ -159,8 +159,8 @@ frontmatter 字段（`src/content.config.ts` 用 Zod 校验）：
   - 权限：`permissions: contents: read, pages: write, id-token: write`；
   - `concurrency` 组（如 `group: pages`，`cancel-in-progress: false`），避免连续两次推送互相
     覆盖部署。
-- `astro.config.mjs`：仓库名为 `less-is-kou.github.io`（用户主页仓形式，地址最干净），
-  因此 `site: 'https://less-is-kou.github.io'`、`base: '/'`（可省略不写）。
+- `astro.config.mjs`：仓库名为 `lessiskou.github.io`（用户主页仓形式，地址最干净），
+  因此 `site: 'https://lessiskou.github.io'`、`base: '/'`（可省略不写）。
   **站内链接与静态资源前缀统一走 `import.meta.env.BASE_URL`**，不手拼——将来若改成项目仓
   （如 `blog`），只需改 `base` 一行，其余不动。
   `<img src="/favicon.ico">` 这种绝对路径在 `base` 非 `/` 时同样会 404，这就是不用手拼的原因。
@@ -182,12 +182,17 @@ frontmatter 字段（`src/content.config.ts` 用 Zod 校验）：
 
 | 项 | 值 |
 |---|---|
-| GitHub 用户名 | `less-is-kou` |
-| 仓库名 | `less-is-kou.github.io`（用户主页仓，站点在根路径） |
-| 站点地址 | `https://less-is-kou.github.io/` |
+| GitHub 用户名 | `lessiskou` |
+| 仓库名 | `lessiskou.github.io`（用户主页仓，站点在根路径） |
+| 站点地址 | `https://lessiskou.github.io/` |
 | 站名 | 寇强 |
 | 首页一句话简介 | 首版用占位文字，作者随时改 |
 | 首批内容 | 一篇示例文章（验证渲染路径），真实文章以后迁移 |
+
+**更正（执行期实测）：** 作者给出的用户名 `less-is-kou` 在 GitHub 上不存在（`gh api users/less-is-kou` 返回 404），
+实际登录账号是 **`lessiskou`**。因此仓库建为 `lessiskou.github.io`（用户主页仓），站点根路径仍是 `/`，
+设计原意（根路径、不设 `base`）不变。若将来把 GitHub 账号改成 `less-is-kou`，重新命名仓库 + 改
+`astro.config.mjs` 的 `site` 一行即可。
 
 **不做迁移工具。** 作者说了以后自己迁。设计只保证“迁进来的文件能用”，不为批量转换
 写脚本、不做旧平台导入——那是一件尚未发生的需求，现在写就是不轻。

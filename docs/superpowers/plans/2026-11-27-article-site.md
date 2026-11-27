@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 `less-is-kou.github.io` 上发布一个由 Markdown 驱动的极简中文文章站，推送即上线。
+**Goal:** 在 `lessiskou.github.io` 上发布一个由 Markdown 驱动的极简中文文章站，推送即上线。
 
 **Architecture:** Astro 7 静态站。文章放在内容集合 `src/content/posts/`，构建期用 `getStaticPaths()` 生成每篇的静态页面；首页从集合查询生成按年分组的列表。纯函数（排序、UTC 日期、地址拼装、草稿过滤、permalink 校验）抽到 `src/lib/posts.js`，用 Node 自带测试运行器做单测；再由一个跑真实构建的验收测试断言产物 HTML。零客户端 JS、零网络字体、无 CSS 框架。
 
@@ -24,7 +24,7 @@
 ## Global Constraints
 
 - `astro` 版本必须精确写为 `"7.4.13"`（不带 `^`），`package-lock.json` 必须提交。
-- `site: 'https://less-is-kou.github.io'`；不设置 `base`（站点在根路径）。
+- `site: 'https://lessiskou.github.io'`；不设置 `base`（站点在根路径）。
 - 所有站内链接与静态资源前缀都用 `import.meta.env.BASE_URL` 拼，不允许手写 `/xxx`。
 - 构建期过滤草稿要在**列表页与 `getStaticPaths` 两处**都做：`import.meta.env.PROD ? data.draft !== true : true`。
 - 日期一律走 UTC（实现用 `toISOString()` 切片/取值），不允许 `getFullYear()`/`getMonth()`/`getDate()`。
@@ -60,7 +60,7 @@
 
 ```json
 {
-  "name": "less-is-kou-site",
+  "name": "lessiskou-site",
   "type": "module",
   "version": "0.1.0",
   "private": true,
@@ -81,7 +81,7 @@
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
-  site: 'https://less-is-kou.github.io',
+  site: 'https://lessiskou.github.io',
   // Astro 7 默认 'jsx' 会删掉行内元素之间的空白；true 保留 HTML 语义下的空格。
   compressHTML: true,
 });
@@ -902,7 +902,7 @@ git commit -m "feat: 抽出布局与中文排版样式"
 
 **Interfaces:**
 - Consumes: 全部前面的产物。
-- Produces: 仓库 `less-is-kou/less-is-kou.github.io`，Pages 以 Actions 为源，站点 `https://less-is-kou.github.io/` 返回 200。
+- Produces: 仓库 `lessiskou/lessiskou.github.io`，Pages 以 Actions 为源，站点 `https://lessiskou.github.io/` 返回 200。
 
 **Dispatch notes:**
 - 本机 `gh` 已登录为账号 `lessiskou`，具备 `repo` 与 `workflow` scope，无需重新登录。
@@ -1028,7 +1028,7 @@ Expected: `git log --oneline -1` 显示这条提交，`git status` 干净。
 - [ ] **Step 5: 建仓库并推送**
 
 ```bash
-gh repo create less-is-kou.github.io --public --source=. --remote=origin --push
+gh repo create lessiskou.github.io --public --source=. --remote=origin --push
 ```
 
 Expected: 输出仓库 URL，`git remote -v` 显示 `origin`。
@@ -1036,13 +1036,13 @@ Expected: 输出仓库 URL，`git remote -v` 显示 `origin`。
 - [ ] **Step 6: 把 Pages 的源设为 GitHub Actions**
 
 ```bash
-gh api --method POST repos/less-is-kou/less-is-kou.github.io/pages -f build_type=workflow
+gh api --method POST repos/lessiskou/lessiskou.github.io/pages -f build_type=workflow
 ```
 
 若返回 409（Pages 已存在），改用：
 
 ```bash
-gh api --method PUT repos/less-is-kou/less-is-kou.github.io/pages -f build_type=workflow
+gh api --method PUT repos/lessiskou/lessiskou.github.io/pages -f build_type=workflow
 ```
 
 Expected: 返回 JSON 里 `"build_type": "workflow"`。
@@ -1052,9 +1052,9 @@ Expected: 返回 JSON 里 `"build_type": "workflow"`。
 Step 5 推送时 Pages 还没启用，那次运行会在部署步骤失败——这是预期内的一次失败。启用后手动重跑：
 
 ```bash
-gh workflow run deploy.yml --repo less-is-kou/less-is-kou.github.io
+gh workflow run deploy.yml --repo lessiskou/lessiskou.github.io
 sleep 5
-gh run list --repo less-is-kou/less-is-kou.github.io --limit 3
+gh run list --repo lessiskou/lessiskou.github.io --limit 3
 ```
 
 Expected: 出现一条 `Deploy to GitHub Pages` 的运行；`gh run watch <run-id>` 到它变成 `completed success`。若仍失败，看日志里是哪个 step，而不是盲目重试。
@@ -1062,8 +1062,8 @@ Expected: 出现一条 `Deploy to GitHub Pages` 的运行；`gh run watch <run-i
 - [ ] **Step 8: 验证在线站点**
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://less-is-kou.github.io/
-curl -sS -o /dev/null -w '%{http_code}\n' https://less-is-kou.github.io/posts/hello-world/
+curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/
+curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/posts/hello-world/
 ```
 
 Expected: 两个都输出 `200`。
@@ -1074,14 +1074,14 @@ Expected: 两个都输出 `200`。
 
 ```bash
 BODY=$(node -e "console.log(Buffer.from('---\\ntitle: 网页端新建\\npubDate: 2026-11-28\\npermalink: web-edit-check\\n---\\n\\n这一篇是在网页上新建的。\\n').toString('base64'))")
-gh api --method PUT repos/less-is-kou/less-is-kou.github.io/contents/src/content/posts/web-edit-check.md \
+gh api --method PUT repos/lessiskou/lessiskou.github.io/contents/src/content/posts/web-edit-check.md \
   -f message="test: 网页端新建文章" -f content="$BODY"
 ```
 
 等 Actions 跑完（`gh run watch`），然后：
 
 ```bash
-curl -sS -o /dev/null -w '%{http_code}\n' https://less-is-kou.github.io/posts/web-edit-check/
+curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/posts/web-edit-check/
 ```
 
 Expected: `200`，首页也出现「网页端新建」。这条通过才说明作者无需本地环境也能发文章。
@@ -1089,8 +1089,8 @@ Expected: `200`，首页也出现「网页端新建」。这条通过才说明�
 - [ ] **Step 10: 删掉这篇验证用的临时文章**
 
 ```bash
-SHA=$(gh api repos/less-is-kou/less-is-kou.github.io/contents/src/content/posts/web-edit-check.md --jq .sha)
-gh api --method DELETE repos/less-is-kou/less-is-kou.github.io/contents/src/content/posts/web-edit-check.md \
+SHA=$(gh api repos/lessiskou/lessiskou.github.io/contents/src/content/posts/web-edit-check.md --jq .sha)
+gh api --method DELETE repos/lessiskou/lessiskou.github.io/contents/src/content/posts/web-edit-check.md \
   -f message="chore: 删除网页端验证文章" -f sha="$SHA"
 ```
 
@@ -1103,3 +1103,68 @@ Expected: 删除成功，下一次部署后该地址变 404。
 - 示例文章（`hello-world.md`、`older-note.md`、`qa-amp.md`、`draft-note.md`）是测试夹具。作者删掉它们时，`tests/site.test.js` 仍是结构化的（按目录里实际存在的文件推导预期），不会因此失败；但 `draft-note.md` 这类用于验证「草稿不出现」的夹具，删掉后就少了一层保护，建议至少留一篇草稿。
 - 第一次部署前 Pages 尚未启用，`gh run` 里可能先出现一次失败；Step 6 设好 `build_type=workflow` 后在 Actions 页手动重跑（`gh workflow run deploy.yml`）即可。
 - 本计划不包含 RSS、标签、搜索、评论、自定义域名——都是 spec 里的非目标。
+
+---
+
+### Task 7: 收尾修正（README 模板、夹具删除后的测试、CI 跑单测）
+
+**Files:**
+- Modify: `README.md`, `tests/site.test.js`, `.github/workflows/deploy.yml`
+
+**Interfaces:**
+- Consumes: Task 1–6 的全部产物；`readFrontmatter()`（Task 3/4/5）、`unescape`（Task 3）。
+- Produces: 无新接口；测试数量保持 21。
+
+- [ ] **Step 1: 拿掉 README 模板里的 `draft: true`**
+
+`README.md` 的「写一篇新文章」示例 frontmatter 里现在有一行未注释的 `draft: true`。作者照抄就会
+得到「构建成功、部署成功、站点上没有」——正是最该避免的静默失败。删掉那一行；`draft` 仍保留在
+下面的字段说明里（作为可选字段解释何时该用）。
+
+- [ ] **Step 2: 在 README 里点名示例文章**
+
+在「测试」或「写一篇新文章」小节加一段：`src/content/posts/` 下现有 6 篇是示例/夹具
+（`hello-world.md`、`older-note.md`、`qa-amp.md`、`note-alias.md`、`随笔.md`、`draft-note.md`），
+可以随时删除，删完不需要改任何列表文件；但请至少留一篇 `draft: true` 的文章，否则「草稿不上线」
+这条保护就没有夹具在验证。
+
+- [ ] **Step 3: 让日期断言不再依赖某一篇具体文章**
+
+`tests/site.test.js` 现在的日期测试硬编码 `hello-world`，作者删掉示例文章后它会红，而且报错看不懂。
+改成结构化断言：
+
+1. `readFrontmatter()` 的返回值加一个 `pubDate` 字段（正则 `^pubDate:\s*(\d{4}-\d{2}-\d{2})`）。
+2. 把那条测试改成：对每一篇非草稿且带 `pubDate` 的文章，找到它自己的页面，断言页面里存在
+   `<time[^>]*>${pubDate}</time>`（必须匹配 `<time>` 里的文字，不能只匹配 ISO 属性）。
+
+- [ ] **Step 4: 部署前跑单测**
+
+`.github/workflows/deploy.yml` 的 `build` job 里，`withastro/action` 之前插入两步：
+
+```yaml
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Unit tests
+        run: node --test tests/posts.test.js
+```
+
+只跑纯函数单测（毫秒级、不需要 Astro 构建），验收测试仍留在本地 `npm test`：它自己会跑一次
+完整构建，放进部署流水线等于每次部署构建两遍。
+
+- [ ] **Step 5: 本地验证**
+
+Run: `npm test`
+Expected: PASS（21 个测试，数量不变）。
+
+- [ ] **Step 6: 提交、推送并确认线上仍绿**
+
+```bash
+git add -A
+git commit -m "chore: README 模板去 draft、日期断言去夹具依赖、部署前跑单测"
+git push
+gh run list --repo lessiskou/lessiskou.github.io --limit 2
+```
+
+Expected: 最新运行 `completed success`（含新增的 Unit tests 步骤），且
+`curl -sS -o /dev/null -w '%{http_code}\n' https://lessiskou.github.io/` 仍为 `200`。
