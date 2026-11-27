@@ -395,18 +395,28 @@ function walk(dir, acc = []) {
 
 const distHtml = () => walk(join(root, 'dist'));
 const distIndex = () => readFileSync(join(root, 'dist/index.html'), 'utf8');
-const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+// Astro 不一定会把 `>` 转成 `&gt;`（HTML 里不必须），所以比较前先归一化实体，
+// 只关心“文字确实出现了”；转义本身由下面单独的断言盯。
+const unescape = (s) =>
+  s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+   .replace(/&#39;/g, "'").replace(/&amp;/g, '&');
 
 before(() => {
   execSync('npm run build', { cwd: root, stdio: 'pipe' });
 }, { timeout: 300_000 });
 
 test('首页列出所有已发布文章，每篇一次', () => {
-  const html = distIndex();
+  const html = unescape(distIndex());
   for (const post of readFrontmatter().filter((p) => !p.draft)) {
-    const hits = html.split(esc(post.title)).length - 1;
+    const hits = html.split(post.title).length - 1;
     assert.equal(hits, 1, `${post.file} 的标题应恰好出现一次`);
   }
+});
+
+test('标题里的 & 与尖括号被转义，不破坏页面结构', () => {
+  const html = distIndex();
+  assert.ok(html.includes('&amp;'), '& 应被转义为 &amp;');
+  assert.ok(!html.includes('<一>'), '原始尖括号不应直接出现');
 });
 
 test('首页出现年份分组标题', () => {
@@ -505,18 +515,16 @@ git commit -m "feat: 首页按年份列出文章"
 
 ```js
 test('每篇已发布文章都有页面，标题出现在其中', () => {
-  const pages = distHtml();
+  const pages = distHtml().map((p) => unescape(p.text));
   for (const post of readFrontmatter().filter((p) => !p.draft)) {
-    const hit = pages.some((p) => p.text.includes(esc(post.title)));
-    assert.ok(hit, `${post.file} 应生成页面`);
+    assert.ok(pages.some((t) => t.includes(post.title)), `${post.file} 应生成页面`);
   }
 });
 
 test('草稿不生成任何页面，也不出现在首页', () => {
-  const draftTitles = readFrontmatter().filter((p) => p.draft).map((p) => esc(p.title));
-  const all = distHtml().map((p) => p.text).join('\n');
-  for (const title of draftTitles) {
-    assert.ok(!all.includes(title), `草稿「${title}」不应出现在任何产物里`);
+  const all = distHtml().map((p) => unescape(p.text)).join('\n');
+  for (const post of readFrontmatter().filter((p) => p.draft)) {
+    assert.ok(!all.includes(post.title), `草稿「${post.title}」不应出现在任何产物里`);
   }
 });
 ```
@@ -565,7 +573,7 @@ const backHref = import.meta.env.BASE_URL;
 - [ ] **Step 4: 跑测试确认通过**
 
 Run: `npm test`
-Expected: PASS（13 个测试）。同时确认 `ls dist/posts` 里有 `hello-world`、`older-note`，没有 `draft-note`。
+Expected: PASS（14 个测试）。同时确认 `ls dist/posts` 里有 `hello-world`、`older-note`，没有 `draft-note`。
 
 - [ ] **Step 5: 提交**
 
@@ -591,6 +599,15 @@ git commit -m "feat: 由内容集合生成文章页，排除草稿"
 在 `tests/site.test.js` 末尾追加：
 
 ```js
+test('页面引入样式表，且排版参数已落地', () => {
+  const page = distHtml()[0];
+  const href = page.text.match(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/)?.[1];
+  assert.ok(href, '页面应引入样式表');
+  const css = readFileSync(join(root, 'dist', href.replace(/^\//, '')), 'utf8');
+  assert.match(css, /max-width:\s*40rem/, '正文宽度应为 40rem');
+  assert.match(css, /line-height:\s*1\.75/, '行高应为 1.75');
+});
+
 test('所有页面都是中文文档且不加载脚本', () => {
   for (const page of distHtml()) {
     assert.match(page.text, /<html lang="zh-CN">/, `${page.path} 缺少 lang="zh-CN"`);
@@ -599,7 +616,7 @@ test('所有页面都是中文文档且不加载脚本', () => {
 });
 
 test('文章页有返回首页的链接', () => {
-  const post = distHtml().find((p) => p.path.includes(`${join('posts', 'hello-world')}`));
+  const post = distHtml().find((p) => p.path.includes(join('posts', 'hello-world')));
   assert.ok(post, '应该有 hello-world 的页面');
   assert.match(post.text, /href="\/"/);
 });
@@ -608,7 +625,7 @@ test('文章页有返回首页的链接', () => {
 - [ ] **Step 2: 跑测试确认失败**
 
 Run: `npm test`
-Expected: 两个新测试至少一个 FAIL（布局还没抽出，或样式未纳入）。
+Expected: 样式表测试 FAIL（还没有 CSS）。另两个断言此时可能已通过（Task 3/4 的页面已经内联了 `lang` 与返回链接）——只要有一个新测试是红的，这一轮就成立。
 
 - [ ] **Step 3: 写 `src/styles/global.css`**
 
@@ -745,7 +762,7 @@ const { post } = Astro.props;
 - [ ] **Step 7: 跑测试确认通过**
 
 Run: `npm test`
-Expected: PASS（15 个测试）。
+Expected: PASS（17 个测试）。
 
 - [ ] **Step 8: 本地肉眼验一遍**
 
@@ -814,7 +831,7 @@ jobs:
 - [ ] **Step 3: 本地最后一次全绿**
 
 Run: `npm test`
-Expected: PASS（15 个测试）。
+Expected: PASS（17 个测试）。
 
 - [ ] **Step 4: 把工作流与说明先提交到本地**
 
