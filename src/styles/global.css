@@ -1,0 +1,55 @@
+:root {
+  --ink: #1f2328;
+  --muted: #6b7280;
+  --rule: #e5e7eb;
+  --link: #1a5fb4;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  font-size: 18px;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0 auto;
+  padding: 3rem 1.25rem 6rem;
+  max-width: 40rem;
+  color: var(--ink);
+  background: #fff;
+  font-family: system-ui, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  line-height: 1.75;
+}
+
+h1 { font-size: 1.5rem; line-height: 1.35; margin: 0 0 0.5rem; }
+h2 { font-size: 1rem; color: var(--muted); font-weight: 600; margin: 2.5rem 0 0.5rem; }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+header p { color: var(--muted); margin: 0 0 2rem; }
+
+ul { list-style: none; margin: 0; padding: 0; }
+li { padding: 0.35rem 0; border-bottom: 1px solid var(--rule); }
+li time { float: right; color: var(--muted); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+
+.excerpt { margin: 0.25rem 0 0.5rem; color: var(--muted); font-size: 0.9rem; }
+
+article { margin-top: 1.5rem; }
+article > time { color: var(--muted); font-size: 0.85rem; }
+
+pre, code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+pre {
+  overflow-x: auto;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { border: 1px solid var(--rule); padding: 0.4rem 0.6rem; text-align: left; }
+
+nav { margin-bottom: 1rem; font-size: 0.9rem; }

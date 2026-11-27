@@ -70,9 +70,11 @@ test('没有 description 的文章不产生空提要', () => {
 
 test('每篇已发布文章都有自己的页面，地址与 permalink 一致', () => {
   const pages = distHtml();
-  for (const post of readFrontmatter().filter((p) => !p.draft && p.permalink)) {
-    const page = pages.find((p) => p.path.includes(join('posts', post.permalink)));
-    assert.ok(page, `${post.file} 应有 /posts/${post.permalink}/ 页面`);
+  for (const post of readFrontmatter().filter((p) => !p.draft)) {
+    const segment = post.permalink ?? post.file.replace(/\.md$/, '');
+    const expected = join(root, 'dist', 'posts', segment, 'index.html');
+    const page = pages.find((p) => p.path === expected);
+    assert.ok(page, `${post.file} 应生成 ${expected}`);
     assert.ok(unescape(page.text).includes(post.title), `${post.file} 的标题应出现在自己的页面里`);
   }
 });
@@ -82,4 +84,26 @@ test('草稿不生成任何页面，也不出现在首页', () => {
   for (const post of readFrontmatter().filter((p) => p.draft)) {
     assert.ok(!all.includes(post.title), `草稿「${post.title}」不应出现在任何产物里`);
   }
+});
+
+test('页面引入样式表，且排版参数已落地', () => {
+  const page = distHtml()[0];
+  const href = page.text.match(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/)?.[1];
+  assert.ok(href, '页面应引入样式表');
+  const css = readFileSync(join(root, 'dist', href.replace(/^\//, '')), 'utf8');
+  assert.match(css, /max-width:\s*40rem/, '正文宽度应为 40rem');
+  assert.match(css, /line-height:\s*1\.75/, '行高应为 1.75');
+});
+
+test('所有页面都是中文文档且不加载脚本', () => {
+  for (const page of distHtml()) {
+    assert.match(page.text, /<html lang="zh-CN">/, `${page.path} 缺少 lang="zh-CN"`);
+    assert.doesNotMatch(page.text, /<script\b/, `${page.path} 不应含 script 标签`);
+  }
+});
+
+test('文章页有返回首页的链接', () => {
+  const post = distHtml().find((p) => p.path.includes(join('posts', 'hello-world')));
+  assert.ok(post, '应该有 hello-world 的页面');
+  assert.match(post.text, /href="\/"/);
 });
