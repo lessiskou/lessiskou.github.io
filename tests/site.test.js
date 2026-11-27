@@ -15,8 +15,9 @@ function readFrontmatter() {
       const raw = readFileSync(join(postsDir, file), 'utf8');
       const block = (raw.match(/^---\r?\n([\s\S]*?)\r?\n---/) ?? [])[1] ?? '';
       const title = (block.match(/^title:\s*(.+)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '');
+      const permalink = (block.match(/^permalink:\s*(.+)$/m)?.[1] ?? '').trim().replace(/^["']|["']$/g, '') || undefined;
       const draft = /^draft:\s*true\s*$/m.test(block);
-      return { file, title, draft };
+      return { file, title, permalink, draft };
     });
 }
 
@@ -65,4 +66,20 @@ test('首页出现年份分组标题', () => {
 
 test('没有 description 的文章不产生空提要', () => {
   assert.doesNotMatch(distIndex(), /class="excerpt"[^>]*>\s*</);
+});
+
+test('每篇已发布文章都有自己的页面，地址与 permalink 一致', () => {
+  const pages = distHtml();
+  for (const post of readFrontmatter().filter((p) => !p.draft && p.permalink)) {
+    const page = pages.find((p) => p.path.includes(join('posts', post.permalink)));
+    assert.ok(page, `${post.file} 应有 /posts/${post.permalink}/ 页面`);
+    assert.ok(unescape(page.text).includes(post.title), `${post.file} 的标题应出现在自己的页面里`);
+  }
+});
+
+test('草稿不生成任何页面，也不出现在首页', () => {
+  const all = distHtml().map((p) => unescape(p.text)).join('\n');
+  for (const post of readFrontmatter().filter((p) => p.draft)) {
+    assert.ok(!all.includes(post.title), `草稿「${post.title}」不应出现在任何产物里`);
+  }
 });
