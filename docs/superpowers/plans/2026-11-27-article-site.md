@@ -557,7 +557,7 @@ git commit -m "feat: 首页按年份列出文章"
 
 ---
 
-### Task 4: 文章页路由
+### Task 4: 文章页路由 ✅
 
 **Dispatch notes:** 本任务开头有一个 Step 0，处理 Task 3 审阅留下的两个小口子（文案与注释），
 与本任务的路由一起提交、一起受审。
@@ -663,13 +663,52 @@ git commit -m "feat: 由内容集合生成文章页，排除草稿"
 
 ### Task 5: 版式与排版（Base/Post 布局、样式、无脚本）
 
+**Dispatch notes:** 本任务开头有一个 Step 0，处理 Task 4 审阅留下的两个验证盲区（permalink 护栏、
+子串匹配）。先做完 Step 0 并跑绿，再做布局与样式；同一个任务里一起提交。
+
 **Files:**
-- Create: `src/layouts/Base.astro`, `src/layouts/Post.astro`, `src/styles/global.css`
+- Create: `src/layouts/Base.astro`, `src/layouts/Post.astro`, `src/styles/global.css`, `src/content/posts/note-alias.md`
 - Modify: `src/pages/index.astro`, `src/pages/posts/[...id].astro`, `tests/site.test.js`
 
 **Interfaces:**
 - Consumes: Task 3/4 的页面。
 - Produces: `Base.astro` 接收 `{ title: string }` 与 `<slot />`；`Post.astro` 接收 `{ post }`（Task 1 的条目形状），内部渲染 `<Content />`。页面只保留各自的 `frontmatter` 数据逻辑。
+
+- [ ] **Step 0a: 加一个「permalink 与文件名不同」的夹具**
+
+现有三篇夹具的 `permalink` 恰好都等于文件名，所以路由写成 `post.id` 也能全绿——`permalinkOf`
+没有任何回归护栏。新建 `src/content/posts/note-alias.md`：
+
+```markdown
+---
+title: 别名地址
+description: permalink 与文件名不同的一篇。
+pubDate: 2024-06-05
+permalink: alias-name
+---
+
+这一篇的地址应该是 /posts/alias-name/，而不是文件名。
+```
+
+- [ ] **Step 0b: 把路径断言改成精确匹配，并覆盖 id 回退**
+
+`tests/site.test.js` 里那条测试改成：
+
+```js
+test('每篇已发布文章都有自己的页面，地址与 permalink 一致', () => {
+  const pages = distHtml();
+  for (const post of readFrontmatter().filter((p) => !p.draft)) {
+    const segment = post.permalink ?? post.file.replace(/\.md$/, '');
+    const expected = join(root, 'dist', 'posts', segment, 'index.html');
+    const page = pages.find((p) => p.path === expected);
+    assert.ok(page, `${post.file} 应生成 ${expected}`);
+    assert.ok(unescape(page.text).includes(post.title), `${post.file} 的标题应出现在自己的页面里`);
+  }
+});
+```
+
+Run: `npm test`
+Expected: PASS（16 个测试；夹具与断言改动不改变数量）。同时确认 `dist/posts/alias-name/index.html` 存在（若路由误用 `post.id`，这里会变成 `note-alias` 并挂红）。
 
 - [ ] **Step 1: 追加失败的测试**
 
@@ -839,7 +878,7 @@ const { post } = Astro.props;
 - [ ] **Step 7: 跑测试确认通过**
 
 Run: `npm test`
-Expected: PASS（17 个测试）。
+Expected: PASS（19 个测试）。
 
 - [ ] **Step 8: 本地肉眼验一遍**
 
@@ -913,7 +952,7 @@ jobs:
 - [ ] **Step 3: 本地最后一次全绿**
 
 Run: `npm test`
-Expected: PASS（17 个测试）。
+Expected: PASS（19 个测试）。
 
 - [ ] **Step 4: 把工作流与说明先提交到本地**
 
