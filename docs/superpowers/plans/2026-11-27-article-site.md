@@ -362,13 +362,53 @@ git commit -m "feat: 文章排序、UTC 日期与地址拼装工具"
 
 ### Task 3: 首页列表（由内容集合生成）
 
+**Dispatch notes:** 本任务开头有一个 Step 0，是 Task 1/2 审阅提出的三条修正（日期校验、UTC 测试、嵌套 id 编码）。先完成 Step 0 并跑绿 `npm test`，再做 Step 1 起的首页工作；两者要在同一个任务里提交。
+
 **Files:**
 - Create: `tests/site.test.js`
-- Modify: `src/pages/index.astro`
+- Modify: `src/pages/index.astro`, `src/content.config.ts`, `src/lib/posts.js`, `tests/posts.test.js`
 
 **Interfaces:**
 - Consumes: `isPublished`, `groupByYear`, `formatDate`, `postPath`, `permalinkOf`（Task 2）；集合 `posts`（Task 1）。
 - Produces: `tests/site.test.js` 里三个可复用助手，供 Task 4/5 的断言使用：`readFrontmatter()` 返回 `{ file, title, draft }[]`；`distHtml()` 返回全部 `dist/**/*.html` 的 `{ path, text }[]`；`buildOnce()` 在 `before` 钩子里跑 `npm run build`。
+
+- [ ] **Step 0a: 收紧 `pubDate` 校验（日期写错必须报错，而不是静默归错年份）**
+
+`z.coerce.date()` 会接受 `2026-1-5` 这种非补零字符串，并按**本地时区**解释——在东八区会把日子算成 `01-04`，元旦那篇会掉进上一年。修改 `src/content.config.ts` 里的 `pubDate`：
+
+```ts
+const isoDay = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'pubDate 必须是补零的 YYYY-MM-DD');
+
+// 在 collection 的 schema 里：
+pubDate: z
+  .union([z.date(), isoDay])
+  .transform((v) => (v instanceof Date ? v : new Date(`${v}T00:00:00Z`))),
+```
+
+YAML 会把 `2026-11-27` 直接解析成 `Date`（UTC 零点），这条分支原样保留；非补零的 `2026-1-5` 是字符串且过不了正则，构建时报错并点名该文件。带时间的 ISO 字符串仍会被 YAML 解析成 `Date`，同样可用。
+
+- [ ] **Step 0b: 跑一次负向校验，确认坏日期被拦下**
+
+新建 `src/content/posts/bad-date.md`（只有 `title` 与 `pubDate: 2026-1-5`），Run: `npm run build`
+Expected: 失败，错误信息包含 `pubDate` 与 `bad-date.md`。删除该文件后重跑 `npm run build` 应通过。
+
+- [ ] **Step 0c: 修正 `postPath` 的嵌套 id 编码**
+
+当前整串 `encodeURIComponent` 会把子目录 id `sub/note` 编成 `sub%2Fnote`，而 `[...id]` 路由实际服务的是 `/posts/sub/note/`，结果是死链。改为逐段编码：`permalinkOf(entry).split('/').map(encodeURIComponent).join('/')`。
+
+在 `tests/posts.test.js` 补两条断言：
+
+```js
+assert.equal(postPath(entry({ id: 'sub/note' }), '/'), '/posts/sub/note/');
+assert.equal(formatDate(new Date('2026-01-01T00:30:00+08:00')), '12-31');
+```
+
+第二条是 UTC 回归：本机在东八区时，用本地取值会得到 `01-01`。
+
+- [ ] **Step 0d: 跑测试确认 Step 0 完成**
+
+Run: `npm test`
+Expected: PASS（10 个测试：原 8 个 + 新增 2 个）。
 
 - [ ] **Step 1: 写失败的验收测试 `tests/site.test.js`**
 
